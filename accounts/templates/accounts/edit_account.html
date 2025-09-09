@@ -1,0 +1,27 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Edit Account{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h2 class="text-center mb-4">Edit Account{% if account.name %} – {{ account.name }}{% endif %}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Update</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <a href="{% url 'account_list' %}" class="btn btn-primary">← Back to Account List</a>
+    </div>
+</div>
+{% endblock %}

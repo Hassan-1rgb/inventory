@@ -1,0 +1,73 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-3">General Ledger Summary</h3>
+
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="date" name="date" class="form-control" required value="{{ date_input }}">
+            <button class="btn btn-primary" type="submit">View Summary</button>
+        </div>
+    </form>
+
+    {% if rows %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Ledger Summary for {{ date_display }}</h5>
+            <button class="btn btn-secondary" onclick="printLedger()">Print</button>
+        </div>
+
+        <div id="ledger-summary">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Account Code</th>
+                        <th>Account Name</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.account_code }}</td>
+                        <td>{{ row.account_name }}</td>
+                        <td>{{ row.debit|default_if_none:0|floatformat:2 }}</td>
+                        <td>{{ row.credit|default_if_none:0|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2" class="text-end">Total</th>
+                        <th>{{ total_debit|floatformat:2 }}</th>
+                        <th>{{ total_credit|floatformat:2 }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <script>
+            function printLedger() {
+                const content = document.getElementById('ledger-summary').innerHTML;
+                const win = window.open('', '', 'width=800,height=600');
+                win.document.write('<html><head><title>Print Ledger Summary</title>');
+                win.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+                win.document.write('</head><body>');
+                win.document.write('<h3 class="mb-3">Ledger Summary for {{ date_display }}</h3>');
+                win.document.write(content);
+                win.document.write('</body></html>');
+                win.document.close();
+                win.print();
+            }
+        </script>
+
+    {% elif warning %}
+        <div class="alert alert-warning">{{ warning }}</div>
+    {% elif error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% else %}
+        <div class="alert alert-info">Please select a date to view the summary.</div>
+    {% endif %}
+</div>
+{% endblock %}

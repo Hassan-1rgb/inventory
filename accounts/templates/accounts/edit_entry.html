@@ -1,0 +1,48 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Edit Entry{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 500px;">
+    {% if messages %}
+        <ul class="list-unstyled mb-4">
+            {% for message in messages %}
+                <li class="p-3 mb-2 bg-info text-dark border-start border-4 border-success rounded">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Edit Entry</h2>
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Date:</label>
+                    <input type="date" name="date" class="form-control" value="{{ entry.date|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description:</label>
+                    <input type="text" name="description" class="form-control" value="{{ entry.description }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Debit:</label>
+                    <input type="number" name="debit" class="form-control" value="{{ entry.debit }}" step="0.01">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Credit:</label>
+                    <input type="number" name="credit" class="form-control" value="{{ entry.credit }}" step="0.01">
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Update Entry</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

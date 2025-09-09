@@ -1,0 +1,106 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4" id="printArea">
+    <h2>Purchased List</h2>
+
+    <!-- Date Filter Form -->
+    <form method="get" class="row g-3 mb-3 no-print">
+        <div class="col-md-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" 
+                   value="{{ request.GET.start_date|default:first_day|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-3">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" name="end_date" id="end_date" class="form-control" 
+                   value="{{ request.GET.end_date|default:today|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <!-- Print Button -->
+    <div class="mb-3 no-print">
+        <button class="btn btn-success" onclick="printDiv('printArea')">🖨️ Print</button>
+    </div>
+
+    <!-- Purchases Table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bill No</th>
+                <th>Date</th>
+                <th>Warehouse</th>
+                <th>Purchase Account</th>
+                <th>Product</th>
+                <th>Vendor</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th class="no-print">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in purchases %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.bill_no }}</td>
+                <td>{{ p.order_date|date:"M. d, Y" }}</td>
+                <td>{{ p.warehouse.name }}</td>
+                <td>{{ p.purchase_account.account_name }}</td>
+                <td>
+                    {% if p.items.all %}
+                        {% for entry in p.items.all %}
+                            {{ entry.product.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ p.vendor.name }}</td>
+                <td>{{ p.amount }}</td>
+                <td>{{ p.get_status_display }}</td>
+                <td class="no-print">
+                    <a href="{% url 'purchase_list' %}?purchase_id={{ p.pk }}" class="btn btn-sm btn-info">View</a>
+                    <a href="{% url 'purchase_list' %}?purchase_id={{ p.pk }}" class="btn btn-sm btn-warning">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center">No Purchases Found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Print Styles -->
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printArea, #printArea * {
+        visibility: visible;
+    }
+    #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+
+<!-- JS for selective print -->
+<script>
+function printDiv(divId) {
+    window.print();
+}
+</script>
+{% endblock %}

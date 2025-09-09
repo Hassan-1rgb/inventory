@@ -1,0 +1,26 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center">
+        {% if user.is_authenticated %}
+            <h2 class="fw-bold mb-3">Welcome, {{ user.username }} </h2>
+            <p class="lead">You're now logged in to your account management.</p>
+
+            <div class="alert alert-success mt-4" role="alert">
+                🔹 Track and manage your accounts with ease.<br>
+                🔹 Record debit and credit entries for each transaction.<br>
+                🔹 View and edit your financial records anytime.<br>
+                Use the sidebar to get started.
+            </div>
+
+        {% else %}
+            <h2 class="fw-bold mb-3">Welcome to Our Portal</h2>
+            <p class="lead mb-4">This is a secure Django-based system for managing your personal or business accounts.</p>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

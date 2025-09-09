@@ -1,0 +1,59 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Purchase</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.bill_no.label_tag }}
+                {{ form.bill_no }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.order_date.label_tag }}
+                {{ form.order_date }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.warehouse.label_tag }}
+                {{ form.warehouse }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.purchase_account.label_tag }}
+                {{ form.purchase_account }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.new_product_entry.label_tag }}
+                {{ form.new_product_entry }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.vendor.label_tag }}
+                {{ form.vendor }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.total_amount.label_tag }}
+                {{ form.total_amount }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.status.label_tag }}
+                {{ form.status }}  <!-- Added status field -->
+            </div>
+        </div>
+
+        <!-- Buttons at bottom-right -->
+        <div class="d-flex justify-content-end mt-3 gap-2">
+            <button type="submit" class="btn btn-sm btn-success">Save</button>
+            <a href="{% url 'purchase_list' %}" class="btn btn-sm btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Sales List</h2>
+
+    <a href="{% url 'add_sale' %}" class="btn btn-success mb-3">Add New Sale</a>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Bill No</th>
+                <th>Order Date</th>
+                <th>Warehouse</th>
+                <th>Account</th>
+                <th>Products</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.bill_no }}</td>
+                <td>{{ sale.order_date|date:"M d, Y" }}</td>
+                <td>{% if sale.warehouse %}{{ sale.warehouse.name }}{% else %}-{% endif %}</td>
+                <td>{% if sale.sale_account %}{{ sale.sale_account.account_name }}{% else %}-{% endif %}</td>
+                <td>
+                    {% if sale.items.all %}
+                        {% for item in sale.items.all %}
+                            {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ sale.amount|floatformat:2 }}</td>
+                <td>
+                    <a href="{% url 'add_sale' sale.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_sale' sale.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center">No sales found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

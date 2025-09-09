@@ -1,0 +1,90 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="container mt-4">
+
+    <h2 class="d-print-none">Ledger Summary </h2>
+
+    <form method="get" class="row g-3 d-print-none">
+        <div class="col-md-4">
+            {{ form.account.label_tag }}
+            {{ form.account }}
+        </div>
+        <div class="col-md-3">
+            {{ form.start_date.label_tag }}
+            {{ form.start_date }}
+        </div>
+        <div class="col-md-3">
+            {{ form.end_date.label_tag }}
+            {{ form.end_date }}
+        </div>
+        <div class="col-md-2 mt-4">
+            <button type="submit" class="btn btn-primary w-100">View</button>
+        </div>
+    </form>
+
+    {% if transactions %}
+    
+
+    <div id="printable">
+        <h3 class="mb-3">Ledger Summary</h3>
+        <p><strong>Account:</strong> {{ selected_account }}</p>
+        <p><strong>Start Date:</strong> {{ formatted_start }}</p>
+        <p><strong>End Date:</strong> {{ formatted_end }}</p>
+        <p><strong>Opening Balance:</strong> {{ opening_balance }}</p>
+        <p><strong>Closing Balance:</strong> {{ closing_balance }}</p>
+
+        <table class="table table-bordered mt-4">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="text-end">Debit</th>
+                    <th class="text-end">Credit</th>
+                    <th class="text-end">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.date }}</td>
+                    <td>{{ txn.description }}</td>
+                    <td class="text-end">{{ txn.debit|default:"0.00" }}</td>
+                    <td class="text-end">{{ txn.credit|default:"0.00" }}</td>
+                    <td class="text-end">{{ txn.running_balance }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable, #printable * {
+        visibility: visible;
+    }
+    #printable {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .d-print-none {
+        display: none !important;
+    }
+}
+</style>
+
+{% endblock %}

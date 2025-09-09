@@ -1,0 +1,45 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Product Entry</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.product.label_tag }}
+                {{ form.product }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.uom.label_tag }}
+                {{ form.uom }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.per_packing_price.label_tag }}
+                {{ form.per_packing_price }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.total_quantity.label_tag }}
+                {{ form.total_quantity }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.total_price.label_tag }}
+                {{ form.total_price }}
+            </div>
+            <div class="col-md-6 d-flex align-items-end justify-content-end">
+                <!-- Update button submits the form and will redirect via view -->
+                <button type="submit" class="btn btn-success btn-sm me-2" name="redirect_stock" value="true">Update</button>
+                <!-- Cancel button goes to Product Entries page -->
+                <a href="{% url 'new_product_list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+            </div>
+            
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'home/base.html' %}
+
+{% block title %}All Entries{% endblock %}
+
+{% block content %}
+<style>
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #e9f1f7;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    .buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .buttons a {
+        background-color: #3498db;
+        color: white;
+        padding: 8px 16px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    .buttons a:hover {
+        background-color: #2d80c0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+        background-color: #3498db;
+        color: white;
+    }
+
+    tr:hover {
+        background-color: #f3faff;
+    }
+
+    .action-links a {
+        margin-right: 10px;
+        color: #2980b9;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .action-links a:hover {
+        text-decoration: underline;
+    }
+
+    h2 {
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    .alert {
+        margin-bottom: 20px;
+    }
+</style>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="top-bar">
+    <h2>Account: {{ account.account_code }} - {{ account.account_name }} - Entries</h2>
+    <div class="buttons">
+        <a href="{% url 'index' %}">Home</a>
+        <a href="{% url 'account_detail' %}">Add Entry</a>
+    </div>
+</div>
+
+<table>
+    <tr>
+        <th>Account Code</th>
+        <th>Account Name</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Actions</th>
+    </tr>
+    {% for entry in entries %}
+    <tr>
+        <td>{{ entry.account.account_code }}</td>
+        <td>{{ entry.account.account_name }}</td>
+        <td>{{ entry.date|date:"F d, Y" }}</td>
+        <td>{{ entry.description }}</td>
+        <td>{{ entry.debit|default_if_none:0|floatformat:2 }}</td>
+        <td>{{ entry.credit|default_if_none:0|floatformat:2 }}</td>
+        <td class="action-links">
+            <a href="{% url 'edit_entry' entry.id %}">Edit</a>
+            <a href="{% url 'delete_entry' entry.id %}">Delete</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="7" style="text-align: center; color: #888;">No entries found.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

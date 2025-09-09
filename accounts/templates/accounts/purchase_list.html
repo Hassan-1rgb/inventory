@@ -1,0 +1,338 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if purchase %}View / Edit Purchase{% else %}Add Purchase{% endif %}</h2>
+
+    <div class="card mb-4 p-3">
+        <form id="purchaseForm" method="post" action="{% url 'save_purchases' %}">
+            {% csrf_token %}
+
+            {% if purchase %}
+                <input type="hidden" name="purchase_id" value="{{ purchase.pk }}">
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.bill_no.label_tag }}
+                    {{ form.bill_no }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.order_date.label_tag }}
+                    {{ form.order_date }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.warehouse.label_tag }}
+                    {{ form.warehouse }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.purchase_account.label_tag }}
+                    {{ form.purchase_account }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.vendor.label_tag }}
+                    {{ form.vendor }}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6 d-flex justify-content-start">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newProductModal">
+                        + Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Print button (only show on record view/edit) -->
+            {% if purchase %}
+            <div class="d-flex justify-content-end mt-2 mb-2">
+                <button type="button" class="btn btn-info btn-sm" id="printBillBtn">
+                    Print Bill
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Products Table -->
+            <h4 class="mt-4">Products Added</h4>
+            <table class="table table-bordered" id="purchaseTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>UOM</th>
+                        <th>unit Price</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="text-center">No products added yet</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4" class="text-end">Total:</th>
+                        <th id="grandTotal">0.00</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Submit/Back buttons -->
+            <div class="row mt-3">
+                <div class="col-md-6 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-sm me-2">Submit Purchase</button>
+                    <a href="{% url 'purchased_list_record' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bill Summary (hidden initially) -->
+    <div class="card mb-4 p-3" id="billSummary" style="display:none;">
+        <h4>Bill Summary</h4>
+        <p><strong>Bill no:</strong> <span id="billNo"></span></p>
+        <p><strong>Order date:</strong> <span id="orderDate"></span></p>
+        <p><strong>Warehouse:</strong> <span id="warehouseName"></span></p>
+        <p><strong>Purchase account:</strong> <span id="purchaseAccountPrint"></span></p>
+        <p><strong>Vendor:</strong> <span id="vendorName"></span></p>
+
+        <table class="table table-bordered mt-3" id="billTable">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>UOM</th>
+                    <th>Per unit Price</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="billTableBody">
+                <!-- Filled dynamically by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for New Product Entry -->
+<div class="modal fade" id="newProductModal" tabindex="-1" aria-labelledby="newProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="newProductForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="newProductModalLabel">Add Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {{ new_product_form.product.label_tag }}
+              {{ new_product_form.product }}
+            </div>
+            <div class="col-md-6">
+              {{ new_product_form.uom.label_tag }}
+              {{ new_product_form.uom }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {{ new_product_form.per_unit_price.label_tag }}
+              {{ new_product_form.per_unit_price }}
+            </div>
+            <div class="col-md-6">
+              {{ new_product_form.quantity.label_tag }}
+              {{ new_product_form.quantity }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {{ new_product_form.price.label_tag }}
+              {{ new_product_form.price }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="saveNewProduct">Add to List</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    let productsList = {{ products_list_json|safe }};
+    let editProductId = null;
+
+    const purchaseForm = document.getElementById("purchaseForm");
+    const newProductModalEl = document.getElementById("newProductModal");
+    const newProductForm = document.getElementById("newProductForm");
+    const billTableBody = document.getElementById("billTableBody");
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateProductTable();
+        updateBillSummary();
+    });
+
+    newProductModalEl.addEventListener("show.bs.modal", function () {
+        if (!editProductId) newProductForm.reset();
+    });
+
+    document.getElementById("saveNewProduct").addEventListener("click", function() {
+        const product_id = newProductForm.querySelector("#id_product").value;
+        const product_text = newProductForm.querySelector("#id_product option:checked").text;
+        const uom = newProductForm.querySelector("#id_uom").value;
+        const per_unit_price = parseFloat(newProductForm.querySelector("#id_per_unit_price").value) || 0;
+        const quantity = parseFloat(newProductForm.querySelector("#id_quantity").value) || 0;
+        const price = parseFloat(newProductForm.querySelector("#id_price").value) || (quantity * per_unit_price);
+
+        let existingIndex = productsList.findIndex(p => p.product_id == product_id);
+
+        if (editProductId) {
+            productsList[existingIndex] = { product_id, product_text, uom, per_unit_price, quantity, price };
+            editProductId = null;
+        } else if (existingIndex !== -1) {
+            productsList[existingIndex].quantity = parseFloat(productsList[existingIndex].quantity) + quantity;
+            productsList[existingIndex].price = parseFloat(productsList[existingIndex].price) + price;
+        } else {
+            productsList.push({ product_id, product_text, uom, per_unit_price, quantity, price });
+        }
+
+        updateProductTable();
+        updateBillSummary();
+        newProductForm.reset();
+        bootstrap.Modal.getInstance(newProductModalEl).hide();
+    });
+
+    function updateProductTable() {
+        const tbody = document.querySelector("#purchaseTable tbody");
+        const grandTotalEl = document.getElementById("grandTotal");
+        tbody.innerHTML = "";
+
+        if (productsList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products added yet</td></tr>';
+            grandTotalEl.textContent = "0.00";
+            return;
+        }
+
+        let grandTotal = 0;
+
+        productsList.forEach((p, i) => {
+            grandTotal += parseFloat(p.price);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                    ${p.product_text}
+                    <input type="hidden" name="product[]" value="${p.product_id}">
+                </td>
+                <td>
+                    ${p.uom}
+                    <input type="hidden" name="uom[]" value="${p.uom}">
+                </td>
+                <td>
+                    ${parseFloat(p.per_unit_price).toFixed(2)}
+                    <input type="hidden" name="per_unit_price[]" value="${p.per_unit_price}">
+                </td>
+                <td>
+                    ${parseFloat(p.quantity).toFixed(2)}
+                    <input type="hidden" name="quantity[]" value="${p.quantity}">
+                </td>
+                <td>
+                    ${parseFloat(p.price).toFixed(2)}
+                    <input type="hidden" name="price[]" value="${p.price}">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="editProduct('${p.product_id}')">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeProduct(${i})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        grandTotalEl.textContent = grandTotal.toFixed(2);
+    }
+
+    function removeProduct(index) {
+        productsList.splice(index, 1);
+        updateProductTable();
+        updateBillSummary();
+    }
+
+    function editProduct(product_id) {
+        const product = productsList.find(p => p.product_id == product_id);
+        editProductId = product_id;
+
+        newProductForm.querySelector("#id_product").value = product.product_id;
+        newProductForm.querySelector("#id_uom").value = product.uom;
+        newProductForm.querySelector("#id_per_unit_price").value = parseFloat(product.per_unit_price).toFixed(2);
+        newProductForm.querySelector("#id_quantity").value = parseFloat(product.quantity).toFixed(2);
+        newProductForm.querySelector("#id_price").value = parseFloat(product.price).toFixed(2);
+
+        new bootstrap.Modal(newProductModalEl).show();
+    }
+
+    newProductModalEl.addEventListener("hidden.bs.modal", function() {
+        editProductId = null;
+    });
+
+    // Update Bill Summary dynamically
+    function updateBillSummary() {
+        if (!document.getElementById("billNo")) return; // Only for record view
+
+        document.getElementById("billNo").textContent = document.getElementById("id_bill_no").value || "-";
+        document.getElementById("orderDate").textContent = document.getElementById("id_order_date").value || "-";
+        document.getElementById("warehouseName").textContent = document.getElementById("id_warehouse").options[document.getElementById("id_warehouse").selectedIndex]?.text || "-";
+        document.getElementById("purchaseAccountPrint").textContent = document.getElementById("id_purchase_account").options[document.getElementById("id_purchase_account").selectedIndex]?.text || "-";
+        document.getElementById("vendorName").textContent = document.getElementById("id_vendor").options[document.getElementById("id_vendor").selectedIndex]?.text || document.getElementById("id_vendor").value || "-";
+
+        billTableBody.innerHTML = "";
+        let total = 0;
+        productsList.forEach(p => {
+            total += parseFloat(p.price);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${p.product_text}</td>
+                <td>${p.uom}</td>
+                <td>${parseFloat(p.per_unit_price).toFixed(2)}</td>
+                <td>${parseFloat(p.quantity).toFixed(2)}</td>
+                <td>${parseFloat(p.price).toFixed(2)}</td>
+            `;
+            billTableBody.appendChild(row);
+        });
+        if (productsList.length > 0) {
+            const totalRow = document.createElement("tr");
+            totalRow.innerHTML = `<th colspan="4" class="text-end">Total:</th><th>${total.toFixed(2)}</th>`;
+            billTableBody.appendChild(totalRow);
+        }
+    }
+
+    // Print Bill
+    const printBtn = document.getElementById("printBillBtn");
+    if (printBtn) {
+        printBtn.addEventListener("click", function() {
+            updateBillSummary();
+            const billSummary = document.getElementById("billSummary");
+            billSummary.style.display = "block";
+
+            const printContents = billSummary.innerHTML;
+            const originalContents = document.body.innerHTML;
+
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+
+            location.reload();
+        });
+    }
+</script>
+
+{% endblock %}

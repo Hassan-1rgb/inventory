@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}Dashboard{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+    background-color: #f8f9fa;
+    padding-top: 70px;
+}
+
+.sidebar {
+    width: 250px;
+    height: calc(100vh - 56px);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    background-color: #343a40;
+    padding: 1rem;
+    transition: transform 0.3s ease;
+    z-index: 1040;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar.hide { transform: translateX(-100%); }
+
+.content-wrapper {
+    margin-left: 250px;
+    padding: 1.5rem;
+    transition: margin-left 0.3s ease;
+}
+
+.content-wrapper.full { margin-left: 0; }
+
+/* Sidebar links */
+.sidebar .nav-link,
+.sidebar .dropdown-item {
+    margin-bottom: 6px;
+    border-radius: 5px;
+    padding: 8px 12px;
+    color: white !important;
+    background-color: #343a40 !important;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* Hover */
+.sidebar .nav-link:hover,
+.sidebar .dropdown-item:hover {
+    background-color: #495057 !important;
+    color: white !important;
+}
+
+/* Active link bold only */
+.sidebar .nav-link.active,
+.sidebar .dropdown-item.active {
+    font-weight: bold;
+    background-color: inherit !important;
+    color: white !important;
+}
+
+/* Highlight parent when dropdown is open */
+.sidebar .nav-link.open {
+    font-weight: bold;
+}
+
+/* Remove focus shadow */
+.sidebar .nav-link:focus,
+.sidebar .dropdown-item:focus {
+    box-shadow: none !important;
+}
+
+/* Dropdown inside sidebar */
+.dropdown-menu.show {
+    display: block;
+    position: static;
+    float: none;
+    background-color: #343a40;
+    border: none;
+    padding-left: 10px;
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark fixed-top">
+<div class="container-fluid">
+{% if user.is_authenticated %}
+<button class="btn btn-dark me-2" id="toggleSidebarBtn">
+<span class="navbar-toggler-icon"></span>
+</button>
+{% endif %}
+<a class="navbar-brand" href="{% url 'index' %}"></a>
+<div class="ms-auto">
+{% if user.is_authenticated %}
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        Profile
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+        <li class="dropdown-item-text">
+            <strong>Welcome, {{ user.username }}</strong><br>
+            <small class="text-muted">Logged in as {{ user.email }}</small>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">🚪 Logout</a></li>
+    </ul>
+</div>
+{% endif %}
+</div>
+</div>
+</nav>
+
+{% if user.is_authenticated %}
+<div id="sidebar" class="sidebar">
+<ul class="nav flex-column">
+
+    <li class="nav-item mb-3">
+        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">Go To Home</a>
+    </li>
+
+    <!-- Accountant Dropdown -->
+    <li class="nav-item dropdown mb-2">
+        <a class="nav-link dropdown-toggle text-white" href="javascript:void(0);" id="accountsDropdown" role="button">
+            Accountant
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark" id="accountsMenu">
+            <li><a class="dropdown-item {% if request.path == '/account-list/' %}active{% endif %}" href="{% url 'account_list' %}">All Accounts</a></li>
+            <li><a class="dropdown-item {% if request.path == '/add-account/' %}active{% endif %}" href="{% url 'add_account' %}">Add Account</a></li>
+            <li><a class="dropdown-item {% if request.path == '/account-detail/' %}active{% endif %}" href="{% url 'account_detail' %}">Add Entry</a></li>
+            <li><a class="dropdown-item {% if request.path == '/account-entries/' %}active{% endif %}" href="{% url 'account_entries' %}">View Entries</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/transactions/' %}active{% endif %}" href="{% url 'transaction_view' %}">Ledger Account View</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/general_ledger_summary/' %}active{% endif %}" href="{% url 'general_ledger_summary' %}">General Ledger</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/trial_balance/' %}active{% endif %}" href="{% url 'trial_balance' %}">Trial Balance</a></li>
+        </ul>
+    </li>
+
+    <!-- Inventory Dropdown -->
+    <li class="nav-item dropdown mb-2">
+        <a class="nav-link dropdown-toggle text-white" href="javascript:void(0);" id="inventoryDropdown" role="button">
+            Inventory
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark" id="inventoryMenu">
+            <li><a class="dropdown-item {% if request.path == '/accounts/product-categories/' %}active{% endif %}" href="{% url 'product_category_list' %}">Product Categories</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/manage-subcategories/' %}active{% endif %}" href="{% url 'manage_subcategories' %}">Manage Subcategory</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/products/' %}active{% endif %}" href="{% url 'product_list' %}">Products</a></li>
+            <li><a class="dropdown-item {% if request.path == '/accounts/warehouses/' %}active{% endif %}" href="{% url 'warehouse_list' %}">Warehouses</a></li>
+            
+            <li><a class="dropdown-item {% if request.path == '/accounts/manage-stock/' %}active{% endif %}" href="{% url 'manage_stock' %}">Manage Stock</a></li>
+
+        </ul>
+    </li>
+
+   
+  <!-- Purchase Dropdown -->
+<li class="nav-item dropdown mb-2">
+    <a class="nav-link dropdown-toggle text-white" href="javascript:void(0);" id="purchaseDropdown" role="button">
+        Purchase
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" id="purchaseMenu">
+        <li><a class="dropdown-item {% if request.path == '/accounts/purchase_list/' %}active{% endif %}" href="{% url 'purchase_list' %}">Create Purchase</a></li>
+        <li><a class="dropdown-item {% if request.path == '/accounts/purchased_list_record/' %}active{% endif %}" href="{% url 'purchased_list_record' %}">Purchases List</a></li>
+        <li><a class="dropdown-item" href="{% url 'new_product_list' %}">Purchase Detail</a></li>
+    </ul>
+</li>
+
+<!-- Sale Dropdown -->
+<li class="nav-item dropdown mb-2">
+    <a class="nav-link dropdown-toggle text-white" href="javascript:void(0);" id="salesDropdown" role="button">
+        Sale
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" id="salesMenu">
+        <li><a class="dropdown-item {% if request.path == '/accounts/sales/new/' %}active{% endif %}" href="{% url 'add_sale' %}">Create Sale</a></li>
+        <li><a class="dropdown-item {% if request.path == '/accounts/sales/' %}active{% endif %}" href="{% url 'sale_list' %}">Sales List</a></li>
+    </ul>
+</li>
+
+    
+
+</ul>
+</div>
+{% endif %}
+
+<div id="mainContent" class="mt-4 content-wrapper {% if not user.is_authenticated %}full{% endif %}">
+{% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Sidebar toggle and dropdown persistence
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const content = document.getElementById('mainContent');
+    
+        // Restore sidebar hidden state
+        if (localStorage.getItem('sidebarHidden') === 'true') {
+            sidebar.classList.add('hide');
+            content.classList.add('full');
+        }
+    
+        // Sidebar toggle button
+        if (toggleBtn && sidebar && content) {
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hide');
+                content.classList.toggle('full');
+                localStorage.setItem('sidebarHidden', sidebar.classList.contains('hide'));
+            });
+        }
+    
+        // Dropdown persistence function
+        function setupDropdown(toggleId, menuId, storageKey) {
+            const toggle = document.getElementById(toggleId);
+            const menu = document.getElementById(menuId);
+            if (!toggle || !menu) return;
+    
+            if (localStorage.getItem(storageKey) === 'true') {
+                menu.classList.add('show');
+                toggle.classList.add('open');
+            }
+    
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                menu.classList.toggle('show');
+                toggle.classList.toggle('open');
+                localStorage.setItem(storageKey, menu.classList.contains('show'));
+            });
+        }
+    
+        // Initialize dropdowns
+        setupDropdown('accountsDropdown', 'accountsMenu', 'accountsDropdownOpen');
+        setupDropdown('inventoryDropdown', 'inventoryMenu', 'inventoryDropdownOpen');
+        setupDropdown('purchaseDropdown', 'purchaseMenu', 'purchaseDropdownOpen');
+        setupDropdown('salesDropdown', 'salesMenu', 'salesDropdownOpen'); // ✅ Added Sales dropdown
+    
+        // Persist sidebar scroll position
+        if (sidebar) {
+            const savedScroll = localStorage.getItem('sidebarScroll');
+            if (savedScroll) sidebar.scrollTop = parseInt(savedScroll);
+    
+            sidebar.addEventListener('scroll', () => {
+                localStorage.setItem('sidebarScroll', sidebar.scrollTop);
+            });
+        }
+    });
+    </script>
+    
+</body>
+</html>

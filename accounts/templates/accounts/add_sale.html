@@ -1,0 +1,252 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if sale %}View / Edit Sale{% else %}Add Sale{% endif %}</h2>
+
+    <div class="card mb-4 p-3">
+        <form id="saleForm" method="post" action="{% url 'save_sales' %}">
+            {% csrf_token %}
+
+            {% if sale %}
+                <input type="hidden" name="sale_id" value="{{ sale.pk }}">
+            {% endif %}
+
+            <!-- Hidden total amount input -->
+            <input type="hidden" name="amount" id="id_total_amount" value="0">
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.bill_no.label_tag }}
+                    {{ form.bill_no }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.order_date.label_tag }}
+                    {{ form.order_date }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_warehouse">Warehouse</label>
+                    <select name="warehouse" id="id_warehouse" class="form-control">
+                        <option value="">Select Warehouse</option>
+                        {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}" {% if sale and sale.warehouse_id == warehouse.id %}selected{% endif %}>
+                                {{ warehouse.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_sale_account">Account</label>
+                    <select name="sale_account" id="id_sale_account" class="form-control">
+                        <option value="">Select Account</option>
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}" {% if sale and sale.sale_account_id == account.id %}selected{% endif %}>
+                                {{ account.account_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6 d-flex justify-content-start">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newSaleProductModal">
+                        + Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <h4 class="mt-4">Products Added</h4>
+            <table class="table table-bordered" id="saleTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>UOM</th>
+                        <th>Per Unit Price</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="text-center">No products added yet</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4" class="text-end">Total:</th>
+                        <th id="grandTotal">0.00</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="row mt-3">
+                <div class="col-md-6 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-sm me-2">Submit Sale</button>
+                    <a href="{% url 'sale_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for New Product Entry -->
+<div class="modal fade" id="newSaleProductModal" tabindex="-1" aria-labelledby="newSaleProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="newSaleProductForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="newSaleProductModalLabel">Add Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {{ new_product_form.product.label_tag }}
+              {{ new_product_form.product }}
+            </div>
+            <div class="col-md-6">
+              {{ new_product_form.uom.label_tag }}
+              {{ new_product_form.uom }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+                {{ new_product_form.per_unit_price.label_tag }}
+                {{ new_product_form.per_unit_price }}
+            </div>
+            <div class="col-md-6">
+                {{ new_product_form.quantity.label_tag }}
+                {{ new_product_form.quantity }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+                {{ new_product_form.price.label_tag }}
+                {{ new_product_form.price }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="saveNewSaleProduct">Add to List</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    let saleProductsList = {{ products_list_json|safe }};
+    let editSaleProductId = null;
+
+    const saleForm = document.getElementById("saleForm");
+    const newSaleProductModalEl = document.getElementById("newSaleProductModal");
+    const newSaleProductForm = document.getElementById("newSaleProductForm");
+    const totalAmountInput = document.getElementById("id_total_amount");
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const orderDateInput = document.getElementById("id_order_date");
+        if (orderDateInput && !orderDateInput.value) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            orderDateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+        updateSaleProductTable();
+    });
+
+    newSaleProductModalEl.addEventListener("show.bs.modal", function () {
+        if (!editSaleProductId) newSaleProductForm.reset();
+    });
+
+    document.getElementById("saveNewSaleProduct").addEventListener("click", function() {
+        const product_id = newSaleProductForm.querySelector("#id_product").value;
+        const product_text = newSaleProductForm.querySelector("#id_product option:checked").text;
+        const uom = newSaleProductForm.querySelector("#id_uom").value;
+        const per_unit_price = parseFloat(newSaleProductForm.querySelector("#id_per_unit_price").value) || 0;
+        const quantity = parseFloat(newSaleProductForm.querySelector("#id_quantity").value) || 0;
+        const price = parseFloat(newSaleProductForm.querySelector("#id_price").value) || (quantity * per_unit_price);
+
+        let existingIndex = saleProductsList.findIndex(p => p.product_id == product_id);
+
+        if (editSaleProductId) {
+            saleProductsList[existingIndex] = {product_id, product_text, uom, per_unit_price, quantity, price};
+            editSaleProductId = null;
+        } else if (existingIndex !== -1) {
+            saleProductsList[existingIndex].quantity += quantity;
+            saleProductsList[existingIndex].price += price;
+        } else {
+            saleProductsList.push({product_id, product_text, uom, per_unit_price, quantity, price});
+        }
+
+        updateSaleProductTable();
+        newSaleProductForm.reset();
+        bootstrap.Modal.getInstance(newSaleProductModalEl).hide();
+    });
+
+    function updateSaleProductTable() {
+        const tbody = document.querySelector("#saleTable tbody");
+        const grandTotalEl = document.getElementById("grandTotal");
+        tbody.innerHTML = "";
+
+        if (saleProductsList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products added yet</td></tr>';
+            grandTotalEl.textContent = "0.00";
+            totalAmountInput.value = 0;
+            return;
+        }
+
+        let grandTotal = 0;
+        saleProductsList.forEach((p, i) => {
+            grandTotal += parseFloat(p.price);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${p.product_text}<input type="hidden" name="product[]" value="${p.product_id}"></td>
+                <td>${p.uom}<input type="hidden" name="uom[]" value="${p.uom}"></td>
+                <td>${parseFloat(p.per_unit_price).toFixed(2)}<input type="hidden" name="per_unit_price[]" value="${p.per_unit_price}"></td>
+                <td>${parseFloat(p.quantity).toFixed(2)}<input type="hidden" name="quantity[]" value="${p.quantity}"></td>
+                <td>${parseFloat(p.price).toFixed(2)}<input type="hidden" name="price[]" value="${p.price}"></td>
+                <td>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="editSaleProduct('${p.product_id}')">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeSaleProduct(${i})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        grandTotalEl.textContent = grandTotal.toFixed(2);
+        totalAmountInput.value = grandTotal.toFixed(2);
+    }
+
+    function removeSaleProduct(index) {
+        saleProductsList.splice(index, 1);
+        updateSaleProductTable();
+    }
+
+    function editSaleProduct(product_id) {
+        const product = saleProductsList.find(p => p.product_id == product_id);
+        editSaleProductId = product_id;
+
+        newSaleProductForm.querySelector("#id_product").value = product.product_id;
+        newSaleProductForm.querySelector("#id_uom").value = product.uom;
+        newSaleProductForm.querySelector("#id_per_unit_price").value = parseFloat(product.per_unit_price).toFixed(2);
+        newSaleProductForm.querySelector("#id_quantity").value = parseFloat(product.quantity).toFixed(2);
+        newSaleProductForm.querySelector("#id_price").value = parseFloat(product.price).toFixed(2);
+
+        new bootstrap.Modal(newSaleProductModalEl).show();
+    }
+
+    newSaleProductModalEl.addEventListener("hidden.bs.modal", function() {
+        editSaleProductId = null;
+    });
+</script>
+{% endblock %}

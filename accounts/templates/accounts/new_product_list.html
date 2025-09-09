@@ -1,0 +1,46 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Purchase Detail</h2>
+        <!-- Button to go to Stock Management -->
+        <a href="{% url 'manage_stock' %}" class="btn btn-success">View Stock</a>
+    </div>
+
+    {% if entries %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Purchase ID</th>
+                    <th>Product</th>
+                    <th>UOM</th>
+                    <th>Per unit Price</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in entries %}
+                <tr>
+                    <td>{{ p.purchase.id }}</td>
+                    <td>{{ p.product }}</td>
+                    <td>{{ p.uom }}</td>
+                    <td>{{ p.per_unit_price }}</td>
+                    <td>{{ p.quantity }}</td>
+                    <td>{{ p.price }}</td>
+                    <td>
+                        <a href="{% url 'edit_product_entry' p.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'delete_product_entry' p.pk %}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Are you sure you want to delete this entry?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No product entries found.</p>
+    {% endif %}
+</div>
+{% endblock %}

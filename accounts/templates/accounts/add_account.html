@@ -1,0 +1,60 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Add Account{% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">Add Account</h2>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_account_code" class="form-label">Account Code</label>
+                            <input type="text" name="account_code" class="form-control" id="id_account_code" value="{{ form.account_code.value|default:'' }}">
+                            {% if form.account_code.errors %}
+                                <div class="text-danger small">{{ form.account_code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_account_name" class="form-label">Account Name</label>
+                            <input type="text" name="account_name" class="form-control" id="id_account_name" value="{{ form.account_name.value|default:'' }}">
+                            {% if form.account_name.errors %}
+                                <div class="text-danger small">{{ form.account_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="is_parent" class="form-check-input" id="id_is_parent" {% if form.is_parent.value %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_parent">Is Parent?</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Save Account</button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'index' %}" class="btn btn-outline-primary">← Back to the Home</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
